@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+env/
+venv/
+accidents.db
+
+# Node/Next.js
+dashboard/node_modules/
+dashboard/.next/
+
+# Secrets
+.env
+dashboard/.env.local
+
+# Heavy artifacts
+weights/
+outputs/
+video/
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.pt
+*.onnx
+*.weights
+*.zip
+
+# OS/Editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+EOF

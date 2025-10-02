@@ -1,0 +1,91 @@
+# ===============================
+# Accident Detection – Inference Config  (CPU-friendly)
+# ===============================
+
+# --- Detector (Ultralytics YOLOv8) ---
+model:
+  backend: ultralytics
+  weights: ./weights/yolov8n.pt
+  device: cpu
+  conf_thresh: 0.50           # tighter -> more precise boxes
+  iou_thresh: 0.60            # stricter NMS -> less box bleeding
+  imgsz: 512                  # good compromise on CPU
+  target_classes: ["car","motorbike","bus","truck"]
+
+# --- Input source ---
+input:
+  source: ./video/sample.mp4
+  resize: [640, 360]          # <<< keep ROI below in the same size
+  stride: 1
+  fallback_fps: 25
+
+# --- Region Of Interest (full frame; MUST match "resize") ---
+roi:
+  polygon:
+    - [0,   0]
+    - [640, 0]
+    - [640, 360]
+    - [0,   360]
+
+# --- Tracking ---
+tracking:
+  mode: deepsort
+  max_age: 15                 # quicker removal = less drift
+  match_thresh: 90            # stricter matching = steadier IDs
+
+# --- Scene calibration ---
+calibration:
+  pixels_per_meter: 12.0
+  image_points:
+    - [200, 300]
+    - [700, 300]
+    - [820, 460]
+    - [80,  460]
+  world_points_m:
+    - [0.0, 0.0]
+    - [20.0, 0.0]
+    - [22.0, 15.0]
+    - [0.0,  15.0]
+  H: null
+
+database:
+  url: "postgresql://postgres:amogh3107@localhost:5432/accidents"
+  echo: false
+
+auth:
+  jwt_secret: "change_me_long_random_secret"
+  jwt_exp_minutes: 1440
+  admin_user: "admin@example.com"
+  admin_pass: "Admin@12345"
+
+# --- Accident / Event rules ---
+accident:
+  # legacy rules (kept):
+  min_speed_kmh: 3
+  stopped_frames: 40
+  sudden_decel_kmh: 20
+  collision_iou: 0.18          # a bit lower so compact impacts trigger
+  near_miss_dist_px: 35
+
+  # NEW: decisive crash rule
+  rel_speed_kmh: 15            # min relative speed for collision
+  iou_spike: 0.08              # IOU jump vs. previous frame
+  window: 6                    # history window (frames)
+
+# --- Output / Visualization ---
+output:
+  draw: true
+  save_video: true
+  out_path: ./outputs/accidents.mp4
+  save_events_csv: ./outputs/events.csv
+  print_console: true
+
+# --- API / Backend ---
+api:
+  enable: true
+  host: 0.0.0.0
+  port: 8000
+
+# --- Logging & Metrics ---
+logging:
+  level: INFO
